@@ -3,25 +3,26 @@ package github
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
-	"github.com/google/go-github/github"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
-// GithubClient for handling requests to the Github V3 and V4 APIs.
-type GithubClient struct {
-	V4         *githubv4.Client
+// Client for handling requests to the Github GraphQL API
+type Client struct {
+	client     *githubv4.Client
 	Repository string
 	Owner      string
 }
 
-// NewGithubClient ...
-func NewGithubClient(s *Source) (*GithubClient, error) {
+// NewClient ...
+func NewClient(s *Source) (*Client, error) {
 	owner, repository, err := parseRepository(s.Repository)
 	if err != nil {
 		return nil, err
@@ -51,38 +52,50 @@ func NewGithubClient(s *Source) (*GithubClient, error) {
 		}
 	}
 
-	var v3 *github.Client
-	if s.V3Endpoint != "" {
-		endpoint, err := url.Parse(s.V3Endpoint)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse v3 endpoint: %s", err)
-		}
-		v3, err = github.NewEnterpriseClient(endpoint.String(), endpoint.String(), client)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		v3 = github.NewClient(client)
+	ghClient, err := getClient(s.V4Endpoint, client)
+	if err != nil {
+		return nil, err
 	}
 
-	var v4 *githubv4.Client
-	if s.V4Endpoint != "" {
-		endpoint, err := url.Parse(s.V4Endpoint)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse v4 endpoint: %s", err)
-		}
-		v4 = githubv4.NewEnterpriseClient(endpoint.String(), client)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		v4 = githubv4.NewClient(client)
-	}
-
-	return &GithubClient{
-		V3:         v3,
-		V4:         v4,
+	return &Client{
+		client:     ghClient,
 		Owner:      owner,
 		Repository: repository,
 	}, nil
+}
+
+func parseRepository(s string) (string, string, error) {
+	parts := strings.Split(s, "/")
+	if len(parts) != 2 {
+		return "", "", errors.New("malformed repository")
+	}
+	return parts[0], parts[1], nil
+}
+
+func getClient(uri string, client *http.Client) (*githubv4.Client, error) {
+	if uri == "" {
+		return githubv4.NewClient(client), nil
+	}
+
+	endpoint, err := url.Parse(uri)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse v4 endpoint: %s", err)
+	}
+
+	ghClient := githubv4.NewEnterpriseClient(endpoint.String(), client)
+
+	return ghClient, nil
+}
+
+// PreviewSchemaTransport is used to access GraphQL schema's hidden behind an Accept header by GitHub
+type PreviewSchemaTransport struct {
+	oauthTransport http.RoundTripper
+}
+
+// RoundTrip appends the Accept header and then executes the parent RoundTrip Transport
+func (t *PreviewSchemaTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	log.Println("setting accept header for timelineItems & files connections preview schemas")
+	r.Header.Add("Accept", "application/vnd.github.starfire-preview+json, application/vnd.github.ocelot-preview+json")
+
+	return t.oauthTransport.RoundTrip(r)
 }
