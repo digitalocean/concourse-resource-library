@@ -1,11 +1,17 @@
 package resource
 
+import (
+	"encoding/json"
+	"os"
+)
+
 // Version communicated with Concourse.
 type Version interface {
 }
 
 // Source is the configuration for the resource
 type Source interface {
+	Validate() error
 }
 
 // Parameters is the configuration for a resource step
@@ -51,6 +57,11 @@ type CheckResponse []Version
 // Len returns the number of versions in the response
 func (r CheckResponse) Len() int {
 	return len(r)
+}
+
+// Write will write the json response to stdout for Concourse to parse
+func (r CheckResponse) Write() error {
+	return json.NewEncoder(os.Stdout).Encode(r)
 }
 
 // GetPutResponse is the data struct returned to Concourse by the resource get & put operations
