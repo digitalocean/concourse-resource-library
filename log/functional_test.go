@@ -9,7 +9,7 @@ import (
 )
 
 func TestLog(t *testing.T) {
-	os.Setenv("LOG_DIRECTORY", "./tmp")
+	os.Setenv("LOG_DIRECTORY", "tmp")
 
 	input := rlog.WriteStdin()
 	defer rlog.Close()
