@@ -29,9 +29,14 @@ func init() {
 		debug = true
 	}
 
+	flags := os.O_RDWR | os.O_CREATE | os.O_APPEND
+	if os.Getenv("LOG_TRUNCATE") != "" {
+		flags = os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	}
+
 	cleanStaleLogs(dir)
 
-	f, err := os.OpenFile(fmt.Sprintf(LogFilePattern, dir, time.Now().Format("2006-01-02")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(fmt.Sprintf(LogFilePattern, dir, time.Now().Format("2006-01-02")), flags, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}

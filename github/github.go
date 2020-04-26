@@ -33,8 +33,10 @@ func Endpoint(endpoint string) func(*Client) error {
 }
 
 // DisableSSLVerification does exactly that
-func DisableSSLVerification(c *Client) error {
-	return c.disableSSLVerification()
+func DisableSSLVerification() func(*Client) error {
+	return func(c *Client) error {
+		return c.disableSSLVerification()
+	}
 }
 
 // AccessToken sets the access token used to query the API
@@ -67,7 +69,14 @@ func NewClient(repository string, options ...func(*Client) error) (*Client, erro
 		Repository:      repository,
 	}
 
+	log.Println("owner:", c.Owner)
+	log.Println("repository:", c.Repository)
+
 	for _, option := range options {
+		if option == nil {
+			return nil, fmt.Errorf("option is nil pointer")
+		}
+
 		err := option(c)
 		if err != nil {
 			return nil, err
@@ -130,6 +139,7 @@ func (c *Client) setPreviewSchema(schema string) error {
 func parseRepository(s string) (string, string, error) {
 	parts := strings.Split(s, "/")
 	if len(parts) != 2 {
+		log.Println("invalid repository config:", s)
 		return "", "", errors.New("malformed repository")
 	}
 	return parts[0], parts[1], nil
