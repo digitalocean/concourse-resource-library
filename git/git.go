@@ -43,11 +43,11 @@ func (c *Client) setAccessToken(token string) error {
 
 // Clone a repository to directory
 func (g *Client) Clone(url, reference string, depth int) (*git.Repository, error) {
-	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
+	r, err := git.PlainClone(g.directory, false, &git.CloneOptions{
 		URL: url,
 		Auth: &http.BasicAuth{
 			Username: "user",
-			Password: g.AccessToken,
+			Password: g.accessToken,
 		},
 		ReferenceName: plumbing.ReferenceName(reference),
 		Depth:         depth,
