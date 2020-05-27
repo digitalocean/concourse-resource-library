@@ -45,6 +45,11 @@ func (p *Project) Execute(path string) error {
 		return err
 	}
 
+	err = write("bootstrap/src/resource.go", path)
+	if err != nil {
+		return err
+	}
+
 	os.MkdirAll(filepath.Join(path, "cmd", "check"), os.ModePerm)
 	err = generate("bootstrap/src/cmd.go", path, filepath.Join("cmd", "check", "main.go"), struct {
 		Module string
