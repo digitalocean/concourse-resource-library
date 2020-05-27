@@ -7,6 +7,8 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	rtAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
 	"github.com/jfrog/jfrog-client-go/config"
 )
@@ -156,6 +158,22 @@ func (c *Client) AQL(aql string) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
+
+	return data, nil
+}
+
+// SearchItems returns the results of an AQL request
+func (c *Client) SearchItems(aql string) ([]utils.ResultItem, error) {
+	p := services.NewSearchParams()
+	p.Aql = utils.Aql{ItemsFind: aql}
+
+	data, err := c.client.SearchFiles(p)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	log.Println(data)
 
 	return data, nil
 }
