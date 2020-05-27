@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
+	github.com/jfrog/jfrog-client-go v0.11.0
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/poy/onpar v0.0.0-20200406201722-06f95a1c68e8
 	github.com/shurcooL/githubv4 v0.0.0-20191127044304-8f68eb5628d0
