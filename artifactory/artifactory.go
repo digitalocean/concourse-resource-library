@@ -1,6 +1,7 @@
 package artifactory
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -30,17 +31,26 @@ func Endpoint(endpoint string) func(*Client) error {
 	}
 }
 
-// AccessToken sets the access token used to query the API
-func AccessToken(token string) func(*Client) error {
+// Authentication sets credentials to be used by the client
+func Authentication(user, password, apiKey, accessToken string) func(*Client) error {
 	return func(c *Client) error {
-		return c.setAccessToken(token)
-	}
-}
+		if user != "" {
+			err := c.setUser(user)
+			if err != nil {
+				return err
+			}
+		}
 
-// User sets the access token used to query the API
-func User(user string) func(*Client) error {
-	return func(c *Client) error {
-		return c.setUser(user)
+		switch {
+		case user != "" && password != "":
+			return c.setPassword(password)
+		case apiKey != "":
+			return c.setAPIKey(apiKey)
+		case accessToken != "":
+			return c.setAPIKey(apiKey)
+		}
+
+		return errors.New("invalid authentication configuration")
 	}
 }
 
@@ -80,20 +90,26 @@ func (c *Client) setEndpoint(v string) error {
 	return nil
 }
 
-func (c *Client) setAccessToken(v string) error {
-	c.accessToken = v
-
-	return nil
-}
-
 func (c *Client) setUser(v string) error {
 	c.user = v
 
 	return nil
 }
 
+func (c *Client) setAccessToken(v string) error {
+	c.accessToken = v
+
+	return nil
+}
+
 func (c *Client) setPassword(v string) error {
 	c.password = v
+
+	return nil
+}
+
+func (c *Client) setAPIKey(v string) error {
+	c.apiKey = v
 
 	return nil
 }
@@ -133,6 +149,7 @@ func rtDetails(c *Client) auth.ServiceDetails {
 	return rtDetails
 }
 
+// AQL returns the results of an AQL request
 func (c *Client) AQL(aql string) ([]byte, error) {
 	data, err := c.client.Aql(aql)
 	if err != nil {
