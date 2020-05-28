@@ -166,6 +166,8 @@ func (c *Client) AQL(aql string) ([]byte, error) {
 func (c *Client) SearchItems(aql string) ([]utils.ResultItem, error) {
 	p := services.NewSearchParams()
 	p.Aql = utils.Aql{ItemsFind: aql}
+	p.SortBy = []string{"modified"}
+	p.SortOrder = "asc"
 
 	data, err := c.client.SearchFiles(p)
 	if err != nil {
@@ -173,7 +175,7 @@ func (c *Client) SearchItems(aql string) ([]utils.ResultItem, error) {
 		return nil, err
 	}
 
-	log.Println(data)
+	log.Println(len(data), data)
 
 	return data, nil
 }
