@@ -1,6 +1,9 @@
 package metadata
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Metadata output from get/put steps
 type Metadata []*Field
@@ -25,4 +28,9 @@ func (m *Metadata) Get(name string) string {
 	}
 
 	return ""
+}
+
+// JSON returns an encoded byte slice of an Artifact
+func (m *Metadata) JSON() ([]byte, error) {
+	return json.Marshal(m)
 }

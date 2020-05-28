@@ -179,3 +179,65 @@ func (c *Client) SearchItems(aql string) ([]utils.ResultItem, error) {
 
 	return data, nil
 }
+
+// SearchItem returns metadata for an artifact by pattern
+func (c *Client) SearchItem(pattern string) (utils.ResultItem, error) {
+	var i utils.ResultItem
+
+	p := services.NewSearchParams()
+	p.Pattern = pattern
+
+	data, err := c.client.SearchFiles(p)
+	if err != nil {
+		log.Println(err)
+		return i, err
+	}
+
+	log.Println(data)
+
+	if len(data) != 1 {
+		err := errors.New("incorrect count of items returned")
+		log.Println(err)
+		return i, err
+	}
+
+	i = data[0]
+
+	return i, nil
+}
+
+// DownloadItems downloads artifacts
+func (c *Client) DownloadItems(pattern, target string) ([]Artifact, error) {
+	artifacts := []Artifact{}
+
+	p := services.NewDownloadParams()
+	p.Pattern = pattern
+	p.Target = target
+
+	r, d, e, err := c.client.DownloadFilesWithResultReader(p)
+	defer r.Close()
+	if err != nil {
+		log.Println(err)
+		return artifacts, err
+	}
+
+	log.Println(d, e)
+
+	var file utils.FileInfo
+	for e := r.NextRecord(&file); e == nil; e = r.NextRecord(&file) {
+		i, err := c.SearchItem(file.ArtifactoryPath)
+		if err != nil {
+			log.Println(err)
+			return artifacts, err
+		}
+
+		a := Artifact{
+			File: file,
+			Item: i,
+		}
+
+		artifacts = append(artifacts, a)
+	}
+
+	return artifacts, nil
+}
