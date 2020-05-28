@@ -16,7 +16,7 @@ type Field struct {
 
 // Add a Field to the Metadata
 func (m *Metadata) Add(name string, value interface{}) {
-	*m = append(*m, &Field{Name: name, Value: fmt.Sprint(value)})
+	*m = append(*m, &Field{Name: name, Value: fmt.Sprintf("%s", value)})
 }
 
 // Get a Field of the Metadata
