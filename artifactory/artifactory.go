@@ -244,22 +244,21 @@ func (c *Client) DownloadItems(pattern, target string) ([]Artifact, error) {
 }
 
 // UploadItems downloads artifacts
-func (c *Client) UploadItems(pattern, target string, props Properties) error {
+func (c *Client) UploadItems(pattern, target string, props Properties) ([]utils.FileInfo, error) {
 	p := services.NewUploadParams()
 	p.Pattern = pattern
 	p.Target = target
 	p.AddVcsProps = false
-	p.Props = props.String()
 
 	a, u, f, err := c.client.UploadFiles(p)
 	if err != nil {
 		log.Println(err)
-		return err
+		return nil, err
 	}
 
 	log.Println(a, u, f)
 
-	return nil
+	return a, nil
 }
 
 // PublishBuildInfo creates a build in artifactory
