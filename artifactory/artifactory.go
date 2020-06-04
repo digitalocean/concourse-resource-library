@@ -241,3 +241,21 @@ func (c *Client) DownloadItems(pattern, target string) ([]Artifact, error) {
 
 	return artifacts, nil
 }
+
+// UploadItems downloads artifacts
+func (c *Client) UploadItems(pattern, target string) error {
+	p := services.NewUploadParams()
+	p.Pattern = pattern
+	p.Target = target
+	p.AddVcsProps = false
+
+	a, u, f, err := c.client.UploadFiles(p)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println(a, u, f)
+
+	return nil
+}
