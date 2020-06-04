@@ -7,6 +7,7 @@ import (
 
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	rtAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
+	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -256,6 +257,17 @@ func (c *Client) UploadItems(pattern, target string) error {
 	}
 
 	log.Println(a, u, f)
+
+	return nil
+}
+
+// PublishBuildInfo creates a build in artifactory
+func (c *Client) PublishBuildInfo(b buildinfo.BuildInfo) error {
+	err := c.client.PublishBuildInfo(&b)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	return nil
 }
