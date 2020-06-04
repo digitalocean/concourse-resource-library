@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-git/go-git/v5"
@@ -13,7 +14,6 @@ type Client struct {
 	repository      *git.Repository
 	accessToken     string
 	sslVerification bool
-	directory       string
 	memory          bool
 	depth           int
 }
@@ -26,10 +26,21 @@ func AccessToken(token string) func(*Client) error {
 }
 
 // NewClient builds a new Git client
-func NewClient(repository string, options ...func(*Client) error) (*Client, error) {
+func NewClient(options ...func(*Client) error) (*Client, error) {
 	c := &Client{
 		depth:           250,
 		sslVerification: true,
+	}
+
+	for _, option := range options {
+		if option == nil {
+			return nil, fmt.Errorf("option is nil pointer")
+		}
+
+		err := option(c)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c, nil
@@ -42,17 +53,27 @@ func (c *Client) setAccessToken(token string) error {
 }
 
 // Clone a repository to directory
-func (g *Client) Clone(url, reference string, depth int) (*git.Repository, error) {
-	r, err := git.PlainClone(g.directory, false, &git.CloneOptions{
+func (c *Client) Clone(url, reference, directory string, depth int) (*git.Repository, error) {
+	r, err := git.PlainClone(directory, false, &git.CloneOptions{
 		URL: url,
 		Auth: &http.BasicAuth{
 			Username: "user",
-			Password: g.accessToken,
+			Password: c.accessToken,
 		},
 		ReferenceName: plumbing.ReferenceName(reference),
 		Depth:         depth,
 		Progress:      os.Stdout,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+// Open a repository from disk
+func (c *Client) Open(directory string) (*git.Repository, error) {
+	r, err := git.PlainOpen(directory)
 	if err != nil {
 		return nil, err
 	}
