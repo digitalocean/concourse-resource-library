@@ -249,6 +249,9 @@ func (c *Client) UploadItems(pattern, target string, props Properties) ([]utils.
 	p.Pattern = pattern
 	p.Target = target
 	p.AddVcsProps = false
+	p.Recursive = true
+	p.Props = props.String()
+	p.Flat = true
 
 	a, u, f, err := c.client.UploadFiles(p)
 	if err != nil {
