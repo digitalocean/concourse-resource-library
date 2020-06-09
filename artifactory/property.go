@@ -2,6 +2,7 @@ package artifactory
 
 import (
 	"bufio"
+	"log"
 	"os"
 	"strings"
 
@@ -24,6 +25,10 @@ func (props Properties) String() string {
 	var s string
 
 	for _, p := range props {
+		if p.Value == "" {
+			log.Println("skipping empty property:", p.Name)
+			continue
+		}
 		s += p.Name + "=" + p.Value + PropertySeparator
 	}
 
