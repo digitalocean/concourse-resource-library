@@ -17,15 +17,35 @@ func main() {
 		log.Fatalf("failed to read request input: %s", err)
 	}
 
-	response, err := resource.{{ .Cmd }}(request)
+	err = request.Source.Validate()
+	if err != nil {
+		log.Fatalf("invalid source config: %s", err)
+	}
+
+	{{ if ne .Cmd "Check" }}
+	if len(os.Args) < 2 {
+		log.Fatalf("missing arguments")
+	}
+	dir := os.Args[1]
+	{{ end }}
+
+	response, err := resource.{{ .Cmd }}(request{{ if ne .Cmd "Check" }}, dir{{ end }})
 	if err != nil {
 		log.Fatalf("failed to perform check: %s", err)
 	}
+
+	{{ if eq .Cmd "Get" }}
+	// write metadata to output dir
+	err = response.Metadata.ToFiles(filepath.Join(dir, "resource"))
+	if err != nil {
+		log.Fatalf("failed to write metadata.json: %s", err)
+	}
+	{{ end }}
 
 	err = response.Write()
 	if err != nil {
 		log.Fatalf("failed to write response to stdout: %s", err)
 	}
 
-	log.Println("{{ .Cmd }} complete")
+	log.Println("{{ lower .Cmd }} complete")
 }

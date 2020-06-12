@@ -50,6 +50,14 @@ type GetParameters struct {
 
 // GetRequest is the data struct received from Concoruse by the resource get operation
 type GetRequest struct {
+	Source  Source        `json:"source"`
+	Version Version       `json:"version"`
+	Params  GetParameters `json:"params"`
+}
+
+// Read will read the json response from Concourse via stdin
+func (r *GetRequest) Read(input []byte) error {
+	return json.Unmarshal(input, r)
 }
 
 // GetResponse ...
@@ -58,10 +66,22 @@ type GetResponse struct {
 	Metadata m.Metadata `json:"metadata,omitempty"`
 }
 
+// Write will write the json response to stdout for Concourse to parse
+func (r GetResponse) Write() error {
+	return json.NewEncoder(os.Stdout).Encode(r)
+}
+
 // PutParameters for the resource
 type PutParameters struct {
 }
 
 // PutRequest is the data struct received from Concoruse by the resource put operation
 type PutRequest struct {
+	Source Source        `json:"source"`
+	Params PutParameters `json:"params"`
+}
+
+// Read will read the json response from Concourse via stdin
+func (r *PutRequest) Read(input []byte) error {
+	return json.Unmarshal(input, r)
 }
