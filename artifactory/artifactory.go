@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	cliConfig "github.com/jfrog/jfrog-cli/utils/config"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	rtAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -147,6 +148,41 @@ func rtDetails(c *Client) auth.ServiceDetails {
 
 	if c.certKeyPath != "" {
 		rtDetails.SetClientCertKeyPath(c.certKeyPath)
+	}
+
+	return rtDetails
+}
+
+func cliDetails(c *Client) cliConfig.ArtifactoryDetails {
+	rtDetails := cliConfig.ArtifactoryDetails{}
+	rtDetails.Url = c.endpoint
+
+	if c.accessToken != "" {
+		rtDetails.AccessToken = c.accessToken
+	}
+
+	if c.sshKeyPath != "" {
+		rtDetails.SshKeyPath = c.sshKeyPath
+	}
+
+	if c.apiKey != "" {
+		rtDetails.ApiKey = c.apiKey
+	}
+
+	if c.user != "" {
+		rtDetails.User = c.user
+	}
+
+	if c.password != "" {
+		rtDetails.Password = c.password
+	}
+
+	if c.certPath != "" {
+		rtDetails.ClientCertPath = c.certPath
+	}
+
+	if c.certKeyPath != "" {
+		rtDetails.ClientCertKeyPath = c.certKeyPath
 	}
 
 	return rtDetails
