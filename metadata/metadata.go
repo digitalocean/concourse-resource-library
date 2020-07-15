@@ -36,9 +36,10 @@ func (m *Metadata) Add(name string, value interface{}) {
 	*m = append(*m, &Field{Name: name, Value: fmt.Sprintf("%s", value)})
 }
 
-// AddJSON a Field to the Metadata
+// AddJSON marshals data, then adds it to the Metadata
 func (m *Metadata) AddJSON(name string, value interface{}) {
-	*m = append(*m, &Field{Name: name, Value: fmt.Sprintf("%s", value), JSON: true})
+	data, _ := json.Marshal(value)
+	*m = append(*m, &Field{Name: name, Value: string(data), JSON: true})
 }
 
 // Get a Field of the Metadata
