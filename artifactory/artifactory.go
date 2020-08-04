@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	cliConfig "github.com/jfrog/jfrog-cli/utils/config"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	rtAuth "github.com/jfrog/jfrog-client-go/artifactory/auth"
 	"github.com/jfrog/jfrog-client-go/artifactory/buildinfo"
@@ -153,39 +152,23 @@ func rtDetails(c *Client) auth.ServiceDetails {
 	return rtDetails
 }
 
-func cliDetails(c *Client) cliConfig.ArtifactoryDetails {
-	rtDetails := cliConfig.ArtifactoryDetails{}
-	rtDetails.Url = c.endpoint
+// BasicCredentials provides interface for container image pull/push
+type BasicCredentials struct {
+	Username string
+	Password string
+}
 
-	if c.accessToken != "" {
-		rtDetails.AccessToken = c.accessToken
+// BasicCredentials builds the BasicCredentials struct
+func (c *Client) BasicCredentials() BasicCredentials {
+	creds := BasicCredentials{Username: c.user}
+	switch {
+	case c.accessToken != "":
+		creds.Password = c.accessToken
+	case c.password != "":
+		creds.Password = c.password
 	}
 
-	if c.sshKeyPath != "" {
-		rtDetails.SshKeyPath = c.sshKeyPath
-	}
-
-	if c.apiKey != "" {
-		rtDetails.ApiKey = c.apiKey
-	}
-
-	if c.user != "" {
-		rtDetails.User = c.user
-	}
-
-	if c.password != "" {
-		rtDetails.Password = c.password
-	}
-
-	if c.certPath != "" {
-		rtDetails.ClientCertPath = c.certPath
-	}
-
-	if c.certKeyPath != "" {
-		rtDetails.ClientCertKeyPath = c.certKeyPath
-	}
-
-	return rtDetails
+	return creds
 }
 
 // AQL returns the results of an AQL request
