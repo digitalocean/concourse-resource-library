@@ -4,10 +4,12 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +25,10 @@ import (
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
 )
+
+// NOTICE
+// Significant portions of this code have been adapted from Alex Suraci's work
+// in this project: https://github.com/concourse/registry-image-resource
 
 // PullImage downloads an image in etiher OCI or RootFS format
 func (c *Client) PullImage(dest, format, repository, identifier, digest string) error {
@@ -287,6 +293,82 @@ func extractLayer(dest string, layer v1.Layer, bar *mpb.Bar, chown bool) error {
 	err = r.Close()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// PushImage uploads an image in OCI format
+func (c *Client) PushImage(src, repository, image string, tags []string) error {
+	if len(tags) < 1 {
+		return errors.New("tags not specified")
+	}
+
+	ref, err := name.ParseReference(repository+tags[0], name.WeakValidation)
+	if err != nil {
+		return err
+	}
+
+	var extraRefs []name.Reference
+	for _, tag := range tags[1:] {
+		n := fmt.Sprintf("%s:%s", repository, tag)
+
+		extraRef, err := name.ParseReference(n, name.WeakValidation)
+		if err != nil {
+			return err
+		}
+
+		extraRefs = append(extraRefs, extraRef)
+	}
+
+	imagePath := filepath.Join(src, image)
+	matches, err := filepath.Glob(imagePath)
+	switch {
+	case err != nil:
+		return err
+	case len(matches) == 0:
+		return errors.New("no images found")
+	case len(matches) > 1:
+		return errors.New("more than 1 image found")
+	}
+
+	img, err := tarball.ImageFromPath(matches[0], nil)
+	if err != nil {
+		return err
+	}
+
+	digest, err := img.Digest()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("pushing %s to %s", digest, ref.Name())
+
+	return put(c.BasicCredentials(), img, ref, extraRefs)
+}
+
+func put(creds BasicCredentials, img v1.Image, ref name.Reference, extraRefs []name.Reference) error {
+	auth := &authn.Basic{
+		Username: creds.Username,
+		Password: creds.Password,
+	}
+
+	err := remote.Write(ref, img, remote.WithAuth(auth))
+	if err != nil {
+		return fmt.Errorf("upload image: %w", err)
+	}
+
+	log.Println("pushed")
+
+	for _, extraRef := range extraRefs {
+		log.Printf("pushing as tag %s", extraRef.Identifier())
+
+		err = remote.Write(extraRef, img, remote.WithAuth(auth), remote.WithTransport(http.DefaultTransport))
+		if err != nil {
+			return fmt.Errorf("tag image: %w", err)
+		}
+
+		log.Println("tagged")
 	}
 
 	return nil
