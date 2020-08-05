@@ -299,14 +299,15 @@ func extractLayer(dest string, layer v1.Layer, bar *mpb.Bar, chown bool) error {
 }
 
 // PushImage uploads an image in OCI format
-func (c *Client) PushImage(src, repository, image string, tags []string) error {
+func (c *Client) PushImage(src, repository, image string, tags []string) (string, error) {
+	var digest string
 	if len(tags) < 1 {
-		return errors.New("tags not specified")
+		return digest, errors.New("tags not specified")
 	}
 
 	ref, err := name.ParseReference(repository+tags[0], name.WeakValidation)
 	if err != nil {
-		return err
+		return digest, err
 	}
 
 	var extraRefs []name.Reference
@@ -315,7 +316,7 @@ func (c *Client) PushImage(src, repository, image string, tags []string) error {
 
 		extraRef, err := name.ParseReference(n, name.WeakValidation)
 		if err != nil {
-			return err
+			return digest, err
 		}
 
 		extraRefs = append(extraRefs, extraRef)
@@ -325,26 +326,33 @@ func (c *Client) PushImage(src, repository, image string, tags []string) error {
 	matches, err := filepath.Glob(imagePath)
 	switch {
 	case err != nil:
-		return err
+		return digest, err
 	case len(matches) == 0:
-		return errors.New("no images found")
+		return digest, errors.New("no images found")
 	case len(matches) > 1:
-		return errors.New("more than 1 image found")
+		return digest, errors.New("more than 1 image found")
 	}
 
 	img, err := tarball.ImageFromPath(matches[0], nil)
 	if err != nil {
-		return err
+		return digest, err
 	}
 
-	digest, err := img.Digest()
+	dig, err := img.Digest()
 	if err != nil {
-		return err
+		return digest, err
 	}
+
+	digest = dig.String()
 
 	log.Printf("pushing %s to %s", digest, ref.Name())
 
-	return put(c.BasicCredentials(), img, ref, extraRefs)
+	err = put(c.BasicCredentials(), img, ref, extraRefs)
+	if err != nil {
+		return digest, err
+	}
+
+	return digest, nil
 }
 
 func put(creds BasicCredentials, img v1.Image, ref name.Reference, extraRefs []name.Reference) error {
