@@ -152,6 +152,25 @@ func rtDetails(c *Client) auth.ServiceDetails {
 	return rtDetails
 }
 
+// BasicCredentials provides interface for container image pull/push
+type BasicCredentials struct {
+	Username string
+	Password string
+}
+
+// BasicCredentials builds the BasicCredentials struct
+func (c *Client) BasicCredentials() BasicCredentials {
+	creds := BasicCredentials{Username: c.user}
+	switch {
+	case c.accessToken != "":
+		creds.Password = c.accessToken
+	case c.password != "":
+		creds.Password = c.password
+	}
+
+	return creds
+}
+
 // AQL returns the results of an AQL request
 func (c *Client) AQL(aql string) ([]byte, error) {
 	data, err := c.client.Aql(aql)
