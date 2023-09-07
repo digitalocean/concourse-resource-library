@@ -3,7 +3,7 @@ module github.com/digitalocean/concourse-resource-library
 go 1.14
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5 // indirect
 	github.com/VividCortex/ewma v1.1.1 // indirect
