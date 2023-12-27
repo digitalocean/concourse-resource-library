@@ -5,13 +5,12 @@ go 1.14
 require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5 // indirect
 	github.com/VividCortex/ewma v1.1.1 // indirect
 	github.com/concourse/go-archive v1.0.1
 	github.com/containerd/containerd v1.3.6 // indirect
 	github.com/docker/docker v1.13.1
 	github.com/fatih/color v1.9.0
-	github.com/go-git/go-git/v5 v5.0.0
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-containerregistry v0.1.1
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
